@@ -1,0 +1,322 @@
+﻿<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.w3.org/1999/xhtml" layout:decorator="fragments/content_layout">
+<head>
+	<title>文章列表</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+	<div id="main">
+		<div id="toolbar">
+			<a class="waves-effect waves-button" href="javascript:;" onclick="createAction()"><i class="zmdi zmdi-plus"></i> 新增</a>
+			<a class="waves-effect waves-button" href="javascript:;" onclick="deleteAction()"><i class="zmdi zmdi-close"></i> 删除</a>
+		</div>
+		<table id="table"></table>
+	</div>
+	
+</div>
+<th:block layout:fragment="script">
+<script th:inline="javascript">
+/*<![CDATA[*/
+var cols = {
+		id : 'id',
+		title : '标题',
+		content_html : '内容',
+		short_content : '简述',
+		keywords : '关键字',
+		source : '来源',
+		source_url : 'url',
+		status : '状态',
+		status_render:function(value){
+			
+			if(value==-1) return '删除';
+			if(value==0)  return '正常';
+			return value;
+		},
+		orderIndex : '排序',
+		cateId : '类别',
+		cateId_render:function(value){
+			
+			if(value==1) return '绿化养护规章';
+			if(value==2)  return '绿化养护法规';
+			return value;
+		},
+		createUser : '创建者',
+		create_date : '创建时间',
+		view_num : '查看次数',
+		update_date : '更新时间'
+};
+
+var $table = $('#table');
+$(function() {
+	
+	$table.bootstrapTable({
+		url: '/rest/search-article.action',
+		height: getHeight(),
+		striped: true,
+		cache:false,
+		search: true,
+		searchOnEnterKey: true,
+		showRefresh: true,
+		showToggle: true,
+		showColumns: true,
+		minimumCountColumns: 2,
+		showPaginationSwitch: true,
+		clickToSelect: true,
+		detailView: true,
+		detailFormatter: 'detailFormatter',
+		pagination: true,
+		paginationLoop: false,
+		classes: 'table table-hover table-no-bordered',
+		silentSort: false,
+		sidePagination: 'server',
+		responseHandler:function(res){
+	        
+	        return {"total": res.data.totalElements,"rows":res.data.content};
+	    },
+	    queryParamsType : "undefined",
+        queryParams: function queryParams(params) {   
+        	
+        	var search_key=$('.bootstrap-table').find('.pull-right.search > input').val();
+        	var param = {
+            	pageNo: params.pageNumber,
+            	pageSize: params.pageSize,
+            	title: search_key
+          	};
+          return param;
+        },
+		smartDisplay: false,
+		idField: 'id',
+		sortName: 'id',
+		sortOrder: 'desc',
+		escape: true,
+		searchOnEnterKey: true,
+		idField: 'id',
+		maintainSelected: true,
+		toolbar: '#toolbar',
+		columns: [
+			{field: 'state', checkbox: true},
+			{field: 'id', title: '编号',  halign: 'center'},
+			{field: 'title', title: '标题',  halign: 'center'},
+			{field: 'cateId', title: '类别',halign: 'center',formatter:function(value, row, index){
+				
+				return cols.cateId_render(value);
+			} },
+			{field: 'short_content', title: '简述',  halign: 'center'},
+			{field: 'keywords', title: '关键字',  halign: 'center'},
+			{field: 'status', title: '状态',formatter:function(value, row, index){
+				
+				return cols.status_render(value);
+			}},
+			{field: 'create_date', title: '创建日期',  halign: 'center'},
+			{field: 'update_date', title: '更新日期',  halign: 'center'},
+			{field: 'action', title: '操作', halign: 'center', align: 'center', formatter: 'actionFormatter', events: 'actionEvents', clickToSelect: false}
+		]
+	}).on('all.bs.table', function (e, name, args) {
+		$('[data-toggle="tooltip"]').tooltip();
+		$('[data-toggle="popover"]').popover();  
+	});
+	
+	//非法字符验证
+	checkIllegalChar();
+	$('.bootstrap-table').find('.pull-right.search > input').attr('placeholder','输入标题');
+});
+function actionFormatter(value, row, index) {
+    return [
+        '<a class="edit ml10" href="javascript:void(0)" data-toggle="tooltip" title="Edit"><i class="glyphicon glyphicon-edit"></i></a>　',
+        '<a class="remove ml10" href="javascript:void(0)" data-toggle="tooltip" title="Remove"><i class="glyphicon glyphicon-remove"></i></a>'
+    ].join('');
+}
+
+window.actionEvents = {
+    'click .edit': function (e, value, row, index) {
+        
+    	createAction(row.id);
+    },
+    'click .remove': function (e, value, row, index) {
+        
+        $.confirm({
+			type: 'red',
+			animationSpeed: 300,
+			title: false,
+			content: '确认删除该记录吗？',
+			buttons: {
+				confirm: {
+					text: '确认',
+					btnClass: 'waves-effect waves-button',
+					action: function () {
+						
+						doDelete(row.id);
+					}
+				},
+				cancel: {
+					text: '取消',
+					btnClass: 'waves-effect waves-button'
+				}
+			}
+		});
+    }
+};
+function detailFormatter(index, row) {
+	var html = [];
+	$.each(row, function (key, value) {
+		if(cols[key] == null) return;
+		if(cols[key+'_render']!==null && typeof cols[key+'_render'] == 'function'){
+			
+			html.push('<p><b>' + cols[key] + ':</b> ' +cols[key+'_render']( value) + '</p>');
+			
+		}else{
+			html.push('<p><b>' + cols[key] + ':</b> ' + value + '</p>');			
+		}
+	});
+	return html.join('');
+}
+// 新增
+var article_dlg;
+function createAction(id) {
+	
+	
+	article_dlg=$.confirm({
+		type: 'dark',
+		animationSpeed: 300,
+		title: id>0?'编辑文章':'新增文章',
+		columnClass:'col-xs-10 col-xs-offset-1',
+		content:id>0?'url:/cms/article-edit.html?id='+id:'url:/cms/article-new.html',
+		onContentReady: function () {
+			
+			this.buttons.confirm.hide();
+			this.buttons.cancel.hide();
+		},
+		buttons: {
+			confirm: {
+				text: '确认',
+				btnClass: 'waves-effect waves-button',
+				action: function () {
+					$.alert('确认');
+				}
+			},
+			cancel: {
+				text: '取消',
+				btnClass: 'waves-effect waves-button'
+			}
+		}
+	});
+}
+// 编辑
+function updateAction() {
+	var rows = $table.bootstrapTable('getSelections');
+	if (rows.length == 0) {
+		$.confirm({
+			title: false,
+			content: '请至少选择一条记录！',
+			autoClose: 'cancel|3000',
+			backgroundDismiss: true,
+			buttons: {
+				cancel: {
+					text: '取消',
+					btnClass: 'waves-effect waves-button'
+				}
+			}
+		});
+	} else {
+		$.confirm({
+			type: 'blue',
+			animationSpeed: 300,
+			title: '编辑文章',
+			content: $('#createDialog').html(),
+			buttons: {
+				confirm: {
+					text: '确认',
+					btnClass: 'waves-effect waves-button',
+					action: function () {
+						$.alert('确认');
+					}
+				},
+				cancel: {
+					text: '取消',
+					btnClass: 'waves-effect waves-button'
+				}
+			}
+		});
+	}
+}
+// 删除
+function deleteAction() {
+	var rows = $table.bootstrapTable('getSelections');
+	if (rows.length == 0) {
+		$.confirm({
+			title: false,
+			content: '请至少选择一条记录！',
+			autoClose: 'cancel|3000',
+			backgroundDismiss: true,
+			buttons: {
+				cancel: {
+					text: '取消',
+					btnClass: 'waves-effect waves-button'
+				}
+			}
+		});
+	} else {
+		$.confirm({
+			type: 'red',
+			animationSpeed: 300,
+			title: false,
+			content: '确认删除该记录吗？',
+			buttons: {
+				confirm: {
+					text: '确认',
+					btnClass: 'waves-effect waves-button',
+					action: function () {
+						var ids = new Array();
+						for (var i in rows) {
+							ids.push(rows[i].systemId);
+						}
+
+						doDelete(ids.join(','));
+					}
+				},
+				cancel: {
+					text: '取消',
+					btnClass: 'waves-effect waves-button'
+				}
+			}
+		});
+	}
+}
+
+
+function doDelete(ids){
+	
+	$.post("/rest/article-rm.action", { ids: ids},function(resp, textStatus, xhr){
+		
+		if(resp.result==1){
+			
+			$table.bootstrapTable('refresh');
+			
+		}else{
+			
+			$.confirm({
+				theme: 'dark',
+				animation: 'rotateX',
+				closeAnimation: 'rotateX',
+				title: false,
+				content: resp.msg,
+				buttons: {
+					confirm: {
+						text: '确认',
+						btnClass: 'waves-effect waves-button waves-light'
+					}
+				}
+			});			
+			
+		}
+		
+	});
+}
+/*]]>*/
+</script>
+</th:block>
+</body>
+</html>

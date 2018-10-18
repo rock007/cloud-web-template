@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html xmlns:layout="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>ajax加载页</title>
+</head>
+<body>
+
+<div id="info_panel" class="alert-stack"></div>
+<div layout:fragment="content" class="container-fluid" >
+
+    这是母版内容页
+
+
+</div>
+<script type="text/javascript">
+
+function showMsg(msg){
+	
+	var html='<div  class="alert alert-danger alert-dismissible fade in" role="alert" > '+
+           ' <button type="button" class="close" data-dismiss="alert" aria-label="Close"> '+
+           '       <span aria-hidden="true">×</span> '+
+           '  </button> '+
+           '  <strong>信息</strong> '+ msg +
+           '</div>';
+    $('#info_panel').append(html);
+}
+</script>
+<th:block layout:fragment="script"></th:block>
+</body>
+</html>

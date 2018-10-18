@@ -1,0 +1,249 @@
+﻿<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+	  xmlns:layout="http://www.w3.org/1999/xhtml" layout:decorator="fragments/pop_layout">
+<head>
+	<title>文章编辑</title>
+</head>
+<body>
+<div layout:fragment="content">
+<div  class="row">
+<div class="col-xs-7" >
+		<div style="height:420px;overflow-y:auto;">
+		 
+		<form class="form-horizontal"  method="post" id="article_edit_form" >
+			<input type="hidden" name="id" id="id" th:value="${one.id}" />
+			<input type="hidden" name="pics" id="pics"/>
+			<input type="hidden" name="rm_pic" id="rm_pic"/>
+			<input type="hidden" id="content_html" name="content_html" th:value="${one.content_html}" />
+			<div class="form-group">
+				<label >标题</label>
+				<input name="title" type="text" maxLength="256" class="form-control" th:value="${one.title}" />
+			</div>
+			<div class="form-group">
+				<label >类别</label>
+				<select name="cateId" id="cateId" class="form-control">
+                    <option value="">(请选择)</option>
+       				<option value="0">绿化养护规章</option>
+       				<option value="1">绿化养护法规</option>
+                </select>
+			</div>
+			<div class="form-group">
+				<label >内容</label>
+				<textarea id="editor" name="editor" rows="3" cols="3" class="form-control" th:text="${one.content_html}" ></textarea>
+			</div>
+			<div class="form-group">
+				<label >简述</label>
+				<textarea name="short_content"  maxLength="256"  rows="3" cols="3" class="form-control"  th:text="${one.short_content}"></textarea>
+			</div>
+			<div class="form-group">
+				<label >关键字</label>
+				<input name="keywords" type="text" maxLength="256"   th:value="${one.keywords}" class="form-control"/>
+				<p class="text-muted">空格分隔</p>
+			</div>
+
+			<div class="form-group">
+				<label >排序</label>
+				<input name="orderIndex" type="number" maxLength="4"   th:value="${one.orderIndex}" class="form-control"/>
+			</div>
+			<div class="form-group">
+			
+				<label >状态</label>
+				<ul class="list-inline">
+					<li><input type="radio" name="status" value="0" checked="checked"/> 正常</li>
+					<li><input type="radio" name="status" value="-1"/> 删除</li>
+				</ul>
+			</div>
+
+	</form>
+	</div>
+	</div>
+	<div class="col-xs-5">
+	
+	<div style="height:420px;overflow-y:auto;">
+		<ul class="list-unstyled">
+                 <li>
+                 <form method="post"> 
+                 		 	
+					<div id="progress" class="progress">
+        				<div class="progress-bar progress-bar-success"></div>
+    			 	</div>		
+                    <span class="btn btn-success fileinput-button">
+        				<span>添加图片...</span>
+        					<input id="upload_file" type="file" name="upload_file" />
+    					</span>
+    				</form>
+                  </li>
+             </ul>
+             <ul class="list-unstyled hide" id="pics_list">
+             
+             	<li th:each="pic : ${pics}" th:id="'li_'+${pic.id}">
+             	
+			 			<img alt="" class="img-holder" src="/images/pic_holder.png" th:src="'http://219.138.150.224:10000/'+${pic.path}"/>
+                    	<a class="btn btn btn-danger" href="javascript:void(0)" th:onClick="${'javascrip:rm_pic('+pic.id+')'}" >清除</a>
+             		</li>	
+             		
+             </ul>
+           </div>  
+	</div>
+	
+	</div>
+	
+	<div class="form-group text-right dialog-buttons">
+			<a class="btn btn-primary" href="javascript:;" onclick="createSubmit();">保存</a>
+			<a class="waves-effect waves-button" href="javascript:;" onclick="article_dlg.close();">取消</a>
+	</div>
+	
+</div>
+<th:block layout:fragment="script">
+<script type="text/javascript" src="/plugins/tinymce/tinymce.min.js"></script>
+<script src="/plugins/jquery-file-upload/js/vendor/jquery.ui.widget.js"></script>
+<script src="/plugins/jquery-file-upload/js/jquery.iframe-transport.js"></script>
+<script src="/plugins/jquery-file-upload/js/jquery.fileupload.js"></script>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+ 
+function createSubmit() {
+	
+	var form=$('#article_edit_form');
+    $.ajax({
+        type: 'post',
+        url: '/rest/article-edit.action',
+        data: form.serialize(),
+        beforeSend: function() {
+            
+        	var title=form.find('input[name="title"]');
+        	var content_html=form.find('input[name="content_html"]');
+        	var short_content=form.find('textarea[name="short_content"]');
+        	
+        	var ed = tinyMCE.get('editor');
+        	
+        	if (title.val() == '') {
+        		title.focus();
+        		showMsg('标题不能为空');
+                return false;
+            }
+        	
+            if (content_html.val() == '') {
+            	
+            	ed.focus();
+            	showMsg('内容不能为空');
+                return false;
+            }
+
+            if (short_content.val() == '') {
+            	short_content.focus();
+            	showMsg('简述不能为空');
+                return false;
+            }
+            
+        },
+        success: function(resp) {
+        	
+			if (resp.result != 1) {
+				
+				showMsg(resp.msg);
+				
+			} else {
+				article_dlg.close();
+				$table.bootstrapTable('refresh');
+			}
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+			$.confirm({
+				theme: 'dark',
+				animation: 'rotateX',
+				closeAnimation: 'rotateX',
+				title: false,
+				content: textStatus,
+				buttons: {
+					confirm: {
+						text: '确认',
+						btnClass: 'waves-effect waves-button waves-light'
+					}
+				}
+			});
+        }
+    });
+}
+
+var cateId=[[${one.cateId}]];
+var status=[[${one.status}]];
+
+$(function(){
+
+	if(cateId != null)
+		$('select[name="cateId"]').val(cateId);
+	
+	if(status != null)
+		$('input[name="status"][value="'+status+'"]').attr("checked","checked");
+	
+	tinymce.init({
+		selector:'#editor',
+		theme: "modern",
+		language: "zh_CN",
+		inline: false,
+		menubar:false,
+		statusbar: false,
+		plugins: "autoresize",
+		init_instance_callback: function (editor) {
+		    editor.on('Change', function (e) {
+		    	
+		    	var content=editor.getContent();
+	        	$('#content_html').val(content);
+	        	
+		   });
+		}
+	});
+	
+	  $('#upload_file').fileupload({
+	        url: "/rest/upload-file.action",
+	        type:"POST",
+	        done: function (e, resp) {
+	            
+	        	console.log(resp.reult);
+	        	if(resp.result.result>0){
+	        		//成功
+	        		var mfile=resp.result.data;
+	        		
+	        		$('#pics').val($('#pics').val()+','+mfile.file_id);
+	        		
+	        		//add textarea
+	        		var img_url= '		<img  alt="" style="width:100%;height:auto" src="http://219.138.150.224:10000/'+mfile.file_url+'"/> ';
+	        		tinymce.activeEditor.insertContent(img_url, {format: 'raw'});
+	        		
+	        	}else{
+	        		//失败
+	        		$.alert(resp.result.msg);
+	        		
+	        	}
+	        	$('#progress .progress-bar').hide();
+	        },
+	        progressall: function (e, data) {
+	            var progress = parseInt(data.loaded / data.total * 100, 10);
+	            $('#progress .progress-bar').css(
+	                'width',
+	                progress + '%'
+	            );
+	        }
+	    }).prop('disabled', !$.support.fileInput)
+	        .parent().addClass($.support.fileInput ? undefined : 'disabled');
+	  
+	//非法字符验证
+	checkIllegalChar();
+}); 
+
+function rm_pic(file_id){
+	   
+	 if(file_id==null ||file_id=='') return;
+	   
+	 //$('#rm_pic').val($('#rm_pic').val()+','+file_id);
+	 $('#rm_pic').val(file_id);
+	 
+}
+
+/*]]>*/
+</script>
+</th:block>
+</body>
+</html>

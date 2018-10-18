@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>首页</title>	
+</head>
+<body>
+<div>
+
+	<h3>this is index page</h3>
+	<h1 th:text="${sso_host}"></h1>
+</div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+    (function () {
+      //!!window.location.href="/dashboard/";
+    })();
+/*]]>*/
+</script>
+
+</body>
+</html>

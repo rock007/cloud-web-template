@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html xmlns:layout="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>子页</title>
+
+    <link th:href="${sso_host+'/plugins/bootstrap-3.3.0/css/bootstrap.min.css'}" rel="stylesheet"/>
+    <link th:href="${sso_host+'/plugins/material-design-iconic-font-2.2.0/css/material-design-iconic-font.min.css'}" rel="stylesheet"/>
+    <link th:href="${sso_host+'/plugins/bootstrap-table-1.11.0/bootstrap-table.min.css'}" rel="stylesheet"/>
+    <link th:href="${sso_host+'/plugins/waves-0.7.5/waves.min.css'}" rel="stylesheet"/>
+    <link th:href="${sso_host+'/plugins/jquery-confirm/jquery-confirm.min.css'}" rel="stylesheet"/>
+
+    <link th:href="${sso_host+'/css/common.css'}" rel="stylesheet"/>
+    <script type="text/javascript">
+    var backend_host=[[${sso_host}]];
+    </script>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+    这是母版内容页
+
+
+</div>
+<script th:src="${sso_host+'/plugins/jquery.1.12.4.min.js'}"></script>
+<script th:src="${sso_host+'/plugins/bootstrap-3.3.0/js/bootstrap.min.js'}"></script>
+<script th:src="${sso_host+'/plugins/bootstrap-table-1.11.0/bootstrap-table.min.js'}"></script>
+<script th:src="${sso_host+'/plugins/bootstrap-table-1.11.0/locale/bootstrap-table-zh-CN.min.js'}"></script>
+<script th:src="${sso_host+'/plugins/waves-0.7.5/waves.min.js'}"></script>
+<script th:src="${sso_host+'/plugins/jquery-confirm/jquery-confirm.min.js'}"></script>
+<script th:src="${sso_host+'/plugins/My97DatePicker/WdatePicker.js'}"></script>
+<script th:src="${sso_host+'/plugins/My97DatePicker/lang/zh-cn.js'}"></script>
+
+<script th:src="${sso_host+'/js/common.js'}"></script>
+<th:block layout:fragment="script"></th:block>
+</body>
+</html>
